@@ -105,6 +105,8 @@ st.markdown(
 """
 )
 
+st.image('')
+
 RuleBook = 'Rule_Book.docx'
 retriever = embed_file(RuleBook)
 
