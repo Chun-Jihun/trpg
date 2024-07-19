@@ -105,7 +105,21 @@ st.markdown(
 """
 )
 
-st.image('')
+# 변수 저장 공간 초기화
+if 'messages' not in st.session_state:
+    st.session_state["messages"] = []
+if 'health' not in st.session_state: # 각 칸에는 이미지 path를 넣어서 0~3까지 표현
+    st.session_state["health"] = ['', '', '', '']
+    st.session_state["mental"] = ['', '', '', '']
+    st.session_state["money"] = ['', '', '', '']
+
+health = st.session_state["health"]
+mental = st.session_state["mental"]
+money = st.session_state["money"]
+st.image(health) # 체력 스텟 이미지
+st.image(mental) # 멘탈 스텟 이미지
+st.image(money) # 자금 스텟 이미지
+st.image('') # 상황 묘사 이미지
 
 RuleBook = 'Rule_Book.docx'
 retriever = embed_file(RuleBook)
@@ -130,5 +144,3 @@ if message:
 
 paint_history()
 
-
-st.session_state["messages"] = []
