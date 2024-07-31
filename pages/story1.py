@@ -235,6 +235,15 @@ def check_dice_roll_required(text):
         return True
     return False
 
+def lost_check():
+    if st.session_state['health'] == 0:
+        return '플레이어의 체력이 0이 되었다.'
+    elif st.session_state['mental'] == 0:
+        return '플레이어의 이성이 0이 되었다.'
+    elif st.session_state['sanity'] == 0:
+        return '플레이어의 정신력이 0이 되었다.'
+    return False
+
 
 def is_dice(input, sentence):
     memory.save_context(
@@ -371,7 +380,7 @@ elif st.session_state.step == 4:
         """
     )
 
-    temp_query = f"KPC는 플레이어가 스토리를 잘 진행할 수 있도록 게임 내에서 내레이터가 조종하여 이끌어주는 캐릭터로, 플레이어의 행동에 과한 개입은 하지 않는다. 또한 KPC라는 단어를 언급해서는 안되며 KPC라는 단어 대신 {st.session_state.kpc_name}으로 수정하여 출력하라. KPC에 대한 직접적인 질문에 대해서는 처음 듣는 단어처럼 행동하라. If you encounter something you don't know, guide the user to follow the provided Context. Do not create information that is not present in the Context under any circumstances. Once all the [ED] conditions are met, output the respective [ED] and conclude the story immediately.And print [엔딩] at the very end.\n"
+    temp_query = f"KPC는 플레이어가 스토리를 잘 진행할 수 있도록 게임 내에서 내레이터가 조종하여 이끌어주는 캐릭터로, 플레이어의 행동에 과한 개입은 하지 않는다. Avoid printing the term 'KPC' under any circumstances.KPC라는 단어 대신 {st.session_state.kpc_name}으로 수정하여 출력하라. KPC에 대한 직접적인 질문에 대해서는 처음 듣는 단어처럼 행동하라. If you encounter something you don't know, guide the user to follow the provided Context. Do not create information that is not present in the Context under any circumstances. Once all the [ED] conditions are met, output the respective [ED] and conclude the story immediately.And print [엔딩] at the very end.\n"
 
     story_query = """
          PC는 플레이어가 조종하는 캐릭터로, 너가 직접 대화를 생성하거나 행동을 조종해서는 안된다. 플레이어의 이름 또는 당신으로 수정하여 출력하라. 또한 PC라는 단어를 언급해서는 안된다.
@@ -380,8 +389,7 @@ elif st.session_state.step == 4:
          Depending on the result of the check, output the outcome of success or failure.
          The types of stats are 체력, 정신력, 이성, 지능, 마력, 민첩, 관찰력, 근력.
 
-         If any of the player's character's 체력, 정신력, or 이성 drops to 0, the game ends and print "[플레이어 로스트]" at the end.
-         If 체력 reaches 0, the character dies. If 정신력 or 이성 reaches 0, the character goes insane, and the game ends.
+         If 체력 or 정신력 or 이성 reaches 0, the game ends and print "[플레이어 로스트]" at the end.
          
          You cannot directly tell the user any content related to the '진상'.
 
@@ -451,6 +459,12 @@ elif st.session_state.step == 4:
                 st.session_state['pending_dice_roll'] = False
                 st.session_state['dice_result'] = dice_result
                 update_sidebar()  # 주사위 굴림 후 스탯 변동 반영
+                lost = lost_check()
+                if lost:
+                    response = story_chain.invoke(lost)
+                    send_message(response.content, role='ai', save=True)
+                    if "플레이어 로스트" in response.content:
+                        st.stop()
                 st.rerun()  # 주사위 굴림 버튼을 안 보이게 하기 위해 페이지를 다시 로드합니다.
         else:
             if 'dice_result' in st.session_state:
@@ -461,9 +475,13 @@ elif st.session_state.step == 4:
                     {"outputs": response.content},
                 )
                 send_message(response.content, role='ai', save=True)
-                if "플레이어 로스트" in response.content:
-                    st.stop()
-                elif "[엔딩]" in response.content:
+                lost = lost_check()
+                if lost:
+                    response = story_chain.invoke(lost)
+                    send_message(response.content, role='ai', save=True)
+                    if "플레이어 로스트" in response.content:
+                        st.stop()
+                if "[엔딩]" in response.content:
                     st.stop()
                 if check_dice_roll_required(response.content):
                     st.rerun()
@@ -482,6 +500,12 @@ elif st.session_state.step == 4:
                     )
                     # response.content = response.content.replace('KPC', st.session_state.kpc_name)
                     send_message(response.content, "ai", save=True)
+                    lost = lost_check()
+                    if lost:
+                        response = story_chain.invoke(lost)
+                        send_message(response.content, role='ai', save=True)
+                        if "플레이어 로스트" in response.content:
+                            st.stop()
                     if "[엔딩]" in response.content:
                         st.stop()
                     if check_dice_roll_required(response.content):
