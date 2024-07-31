@@ -390,6 +390,7 @@ elif st.session_state.step == 4:
          The types of stats are 체력, 정신력, 이성, 지능, 마력, 민첩, 관찰력, 근력.
 
          If 체력 or 정신력 or 이성 reaches 0, the game ends and print "[플레이어 로스트]" at the end.
+         체력 또는 정신력 또는 이성 중 한가지가 0에 도달하였을 때만 print "[플레이어 로스트]" at the end.
          
          You cannot directly tell the user any content related to the '진상'.
 
@@ -403,7 +404,7 @@ elif st.session_state.step == 4:
          """
 
     story_query = story_query + temp_query
-    story_query += "플레이어의 캐릭터 : \n" + st.session_state.character_sheet
+    story_query += "플레이어의 캐릭터 : \n" + st.session_state.character_sheet + "플레이어의 스탯 : \n" + st.session_state.stat_sheet
 
     story_prompt = ChatPromptTemplate.from_messages([
         ("system",
