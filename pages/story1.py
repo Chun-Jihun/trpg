@@ -463,6 +463,8 @@ elif st.session_state.step == 4:
                 send_message(response.content, role='ai', save=True)
                 if "플레이어 로스트" in response.content:
                     st.stop()
+                elif "[엔딩]" in response.content:
+                    st.stop()
                 if check_dice_roll_required(response.content):
                     st.rerun()
             message = st.chat_input("다음 행동을 입력하세요...")
@@ -480,6 +482,8 @@ elif st.session_state.step == 4:
                     )
                     # response.content = response.content.replace('KPC', st.session_state.kpc_name)
                     send_message(response.content, "ai", save=True)
+                    if "[엔딩]" in response.content:
+                        st.stop()
                     if check_dice_roll_required(response.content):
                         st.rerun()
                 else:
